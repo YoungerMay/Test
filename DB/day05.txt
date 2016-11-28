@@ -1,0 +1,277 @@
+2016年8月26日     星期五     刘英谦
+
+知识点：
+1 表的连接查询（关联查询）：所需要查询的数据来源于多张表，通过关联查询来查询所需要的数据，比如查询员工的编号，姓名（emp）以及员工所属的部门的编号，名称（dept）
+1）给表起别名,通过别名指向对应表中的列。
+select e.empno,e.ename,e.job,e.hiredate
+from emp e
+案例：查询员工的编号，姓名以及所属部门的编号和名称
+select e.empno,e.ename,d.deptno,d.dname
+from emp e,dept d         --48
+2) 笛卡尔积：进行两张或者多张表连接查询的时候，没有加入关联条件，两张表的数据之间自动进行任意的组合，就是笛卡尔积。再多表连接查询中，一定要尽量避免出现笛卡尔积。
+3）关联条件：用来描述两张表之间的关联关系，避免产生笛卡尔积。比如emp表中部门编号deptno，跟dept表中部门的编号deptno是一致。
+emp表和dept表之间的关联关系：emp.deptno = dept.deptno
+案例：查询emp表中员工的编号，姓名以及所属部门的编号，名称
+select e.empno,e.ename,e.deptno,d.dname
+from emp e,dept d
+where e.deptno = d.deptno
+案例：查询emp表中员工的姓名，职位，工资，入职时间以及所属部门的编号，名称以及地址
+select e.ename,e.job,e.sal,e.hiredate,
+d.*
+from emp e,dept d
+where e.deptno = d.deptno
+格式：
+select 别名1.*/列名,别名2.*/列名
+from 表1 别名1,表2 别名2
+where 关联条件
+案例：查询dept表中部门的名称，地址以及该部门下员工的编号，姓名，职位，根据员工的编号进行降序排列
+select d.dname,d.loc,e.empno,e.ename,
+e.job
+from dept d,emp e
+where d.deptno = e.deptno
+order by e.empno desc
+关联条件用“=”连接的，称为等值连接。
+案例：查询工资在1000~2500之间所有员工的编号，姓名，职位，工资以及所属部门的地址，根据工资进行升序排列
+select e.empno,e.ename,e.job,e.sal,d.loc
+from emp e,dept d
+where e.deptno = d.deptno and
+e.sal between 1000 and 2500
+order by e.sal
+
+4) 非等值连接：关联条件不是使用'='连接的
+emp表中员工的工资在salgrade表（工资等级表）中的最低工资（losal）和最高工资（hisal）之间。
+emp表和salgrade s表之间的关联关系:
+emp.sal between s.losal and s.hisal
+案例：查询emp表中员工的编号，姓名，工资以及该工资的等级
+select e.empno,e.ename,e.sal,s.grade
+from emp e,salgrade s
+where e.sal between s.losal and s.hisal
+案例：查询emp表中员工的编号，姓名，职位，工资以及工资的等级，该等级的最高工资，最低工资，最后根据工资的等级进行升序排列，如果等级一致，根据员工的编号进行降序排列。
+select e.empno,e.ename,e.job,e.sal,s.*
+from emp e,salgrade s
+where e.sal between s.losal and s.hisal
+order by s.grade asc,e.empno desc
+
+5) 自连接：一张表中列之间有关联关系，自己跟自己连接就是自连接.
+把emp表中看成两张表，一张表是员工表，另外一张表示领导表，其中员工表中mgr（上级领导编号）等于领导表中empno（员工的编号）。
+员工表.mgr = 领导表.empno
+案例：查询emp表中员工的编号，姓名以及上级领导的编号，姓名
+select e.empno,e.ename,m.empno,m.ename
+from emp e,emp m  --e,员工表; m,领导表
+where e.mgr = m.empno
+案例：查询emp表中员工的编号，姓名，职位，工资以及上级领导的编号，姓名，职位，工资，根据员工的工资进行升序排列，如果工资一致，根据员工的编号进行降序排列。
+select e.empno,e.ename,e.job,e.sal,e.mgr
+,m.ename,m.job,m.sal
+from emp e,emp m
+where e.mgr = m.empno
+order by e.sal asc,e.empno desc
+案例：查询emp表中名字不是以'S'开头，并且工资高于1000的员工的编号，姓名，工资以及上级领导的编号，姓名，工资，根据员工的工资进行升序排列。
+select e.empno,e.ename,e.sal,e.mgr,
+m.ename,m.sal
+from emp e,emp m
+where e.mgr = m.empno and 
+e.ename not like 'S%' and e.sal>1000
+order by e.sal
+6) 内连接：关联查询中只查询两张表中有关联关系的数据，称为内连接。
+
+2 Oracle中用于外连接专用的语法
+insert into emp(empno,ename)
+values(1111,'白起')
+insert into emp(empno,ename)
+values(5555,'吕布')
+insert into emp(empno,ename)
+values(6666,'孙武')
+insert into dept
+values(50,'开发部门','北京')
+insert into dept
+values(60,'测试部门','上海')
+案例：查询emp表中所有员工的编号，姓名以及所属部门的编号，名称
+select e.empno,e.ename,d.deptno,d.dname
+from emp e,dept d
+where e.deptno = d.deptno(+)
+使用Oracle专门语法实现外连接（以某一张表为主，查询该表中所有的数据），在条件的位置加上(+)，“对面的条件”
+案例：查询dept表中所有部门的编号，名称以及该部门下员工的姓名，职位
+select d.deptno,d.dname,e.ename,e.job
+from dept d,emp e
+where d.deptno = e.deptno(+)
+案例：查询emp表中所有员工的编号，姓名，职位，入职时间以及该员工所属的部门的名称和地址，根据员工的编号进行降序排列。
+select e.empno,e.ename,e.job,e.hiredate,
+d.dname,d.loc
+from emp e,dept d
+where d.deptno(+) = e.deptno
+order by e.empno desc
+案例：查询emp表中所有员工的编号，姓名，职位，工资以及上级领导的编号，姓名，职位，工资
+select e.empno,e.ename,e.job,e.sal,
+m.empno,m.ename,m.job,m.sal
+from emp e,emp m
+where e.mgr = m.empno(+)
+案例：查询emp表中所有员工的编号，姓名，职位，工资，入职时间以及工资的等级，该等级下的最高工资
+select e.empno,e.ename,e.job,e.sal,
+e.hiredate,s.grade,s.hisal
+from emp e,salgrade s
+where e.sal between s.losal(+) and 
+s.hisal(+)
+select e.empno,e.ename,e.job,e.sal,
+e.hiredate,s.grade,s.hisal
+from emp e,salgrade s
+where e.sal >= s.losal(+) and 
+e.sal <= s.hisal(+)
+缺点：使用Oracle的专门外连接的语法，只能查询某一张表中所有的数据，而不能查询所有表中所有的数据，因为（+）只能放在条件的一端，不能在条件的两端都加上（+）
+--反例
+select e.*,d.*
+from emp e,dept d
+where e.deptno(+) = d.deptno(+)
+
+3 检查约束：用于限定某列的列值必须要满足某些特定的条件，避免用户输入一些非法数据
+1）创建表的时候创建检查约束：
+create table worker10(
+id number(4) primary key,
+name varchar2(20) unique,
+sex char(2) check(sex in('男','女')),
+age number(3),
+email varchar2(50)
+)
+insert into worker10 
+values(1,'冰心','女',32,'xin@163.com')
+insert into worker10
+values(2,'张恨水','男',36,
+'shui@126.com')
+--反例
+insert into worker10
+values(3,'东方不败','中',45,
+'bai@163.com')
+2) 修改表时候设置检查约束：
+alter table 表名
+add constraint 约束名 check(条件)
+案例：设置worker10中age列上检查约束，要求年龄必须是1~100之间。
+alter table worker10
+add constraint chk_age 
+check(age between 1 and 100)
+--反例:
+insert into worker10
+values(3,'张三丰','男',120,
+'feng@126.com')
+案例：在worker10中的email列上，设置检查约束，要求email中必须包含@
+alter table worker10
+add constraint chk_email 
+check(email like '%@%')
+3) 删除检查约束：
+alter table 表名 drop constraint 约束名
+案例：删除worker10中CHK_AGE和CHK_EMAIL约束
+alter table worker10 
+drop constraint chk_age
+alter table worker10
+drop constraint chk_email
+
+4 默认值约束：指定表中的某一个列提前设置一个默认值，如果该列中没有插入数值，系统就会自动填充默认值。
+1）每一个列只能设置一个默认值
+2）创建表时候创建默认值
+create table worker11(
+id number(4) primary key,
+name varchar2(50),
+hiredate date default sysdate,
+age number(3) default 20
+)
+insert into worker11
+values(1,'曹操','16-12月-00',35)
+insert into worker11(id,name)
+values(2,'刘表')
+3）修改表的时候设置默认值（了解）
+使用modify设置默认值
+alter table 表名
+modify 列名 数据类型 default 数值
+案例：修改worker11中age列上默认值，设置为30
+alter table worker11
+modify age number(3) default 30
+4) 删除默认值（了解）
+使用modify把默认值设置为null
+alter table 表名
+modify 列名 数据类型 default null
+案例：删除worker11中age列上的默认值
+alter table worker11
+modify age number(3) default null
+案例：删除worker11中hiredate列上的默认值
+alter table worker11
+modify hiredate date default null
+
+5 非空约束：用来指定某一个列的列值不能为null
+1）创建表的时候指定非空约束：
+create table worker12(
+id number(4) primary key,
+name varchar2(50) not null unique,
+age number(3),
+address varchar2(50),
+email varchar2(50)
+)
+--反例：
+insert into worker12(id) values(1)
+2) 修改表的时候指定非空约束
+使用modify
+alter table 表名
+modify(列名1 not null)
+modify(列名2 not null)
+modify(列名3 not null)
+...
+modify(列名n not null)
+案例：修改worker12，在age，address，email列上设置非空约束
+alter table worker12
+modify(age not null)
+modify(address not null)
+modify(email not null)
+3) 删除非空约束（了解）
+使用modify把列设置为null，也可以同时删除多个非空约束。
+alter table 表名
+modify(列名1 null)
+modify(列名2 null)
+...
+modify(列名n null)
+案例：删除worker12中name，age，email，
+address列上所有的非空约束
+alter table worker12
+modify(name null)
+modify(age null)
+modify(email null)
+modify(address null)
+
+6 索引：索引是建立在表中列上的数据库对象，用于提高数据的查询速度。
+1）索引一旦被创建以后就由Oracle系统自动进行维护，在查询语句中不需要指定使用是具体的哪一个索引。
+2）创建索引的格式：
+create index 索引名称 
+on 表名(列名)
+案例：在book表中的name列上，创建一个索引index_name
+create index index_name
+on book(bname)
+案例：分别在book表中的author，type列上创建所有index_author,index_type
+create index index_author
+on book(author)
+create index index_type
+on book(type)
+3) 主键所在的列，默认添加索引，使用主键所在的列作为查询条件，查询的速度很快。
+create table worker20(
+id number(4) primary key,
+name varchar2(50) unique,
+age number(3) not null
+)
+4) 使用唯一约束修饰的列，系统默认在该列上指定索引。
+5) 删除索引：
+drop index 索引名称
+案例：删除book表中name列上的索引
+index_name
+drop index index_name
+案例：删除book表中index_author和
+index_type两个索引
+drop index index_author
+drop index index_type
+6）索引优点和缺点：
+优点：提高查询效率
+缺点：a）创建索引会占用磁盘物理存储空间;
+b）创建索引会提高查询的速度，但是减慢修改数据的速度。
+
+
+
+
+
+
+
+
+

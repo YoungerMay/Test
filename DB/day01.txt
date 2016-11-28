@@ -1,0 +1,196 @@
+2016年8月22日      星期一      刘英谦
+
+知识点：
+1 Oracle数据库是Oracle公司（甲骨文）公司研发的一款功能强大的关系型数据库，主要的版本Oracle10g,Oracle11g,Oracle12c...
+教学中主要以Oracle10g。
+  Oracle公司是世界上最大的数据库厂商,Oracle公司的产品占据大量市场份额。
+
+2 登录Oracle数据库:
+cmd -- sqlplus system/1234
+                 表空间名/口令（密码）
+
+3 表空间：表空间是用来存储数据库对象的容器，表和表空间的关系就像文件和文件夹一样。
+1) 表空间由一个或者若干个数据文件组成，这些数据文件是数据库实际存放数据的位置。
+2) 创建数据库的时候，系统会默认为数据库创建一个SYSTEM表空间，一个数据库可以包含若干个表空间，也可以只有一个SYSTEM表空间。
+
+4 SQL语句：结构化查询语句（语言），是专门用来操作数据库而建立的操作命令集，是一种功能齐全并且强大的数据库语句，使用SQL语句可以完成对数据库的各种操作。而我们学习数据库，最重要就是学习SQL语句，必须掌握。
+SQL语句分类：
+DDL：数据库定义语句，主要用来创建，删除，修改表的结构。
+create  ， drop ， alter
+DML：数据操作语句，用来操作（插入，修改，删除）表中的数据。
+insert ， delete ， update
+DCL(TCL): 事务控制语句，用来管理数据库中的事务。
+commit , rollback
+DQL : 数据库的查询语句，使用查询语句查询所需要的数据（学习重点）
+select
+
+5 Oracle中常用的数据类型：
+1) 字符型：char(n),varchar(n),varchar2(n)
+char(n):用来保存固定长度的字符串，n代表能保存字符串最大的长度，如果保存数据实际长度小于n，数据右边使用空格补齐。比如：
+保存'liu'，占据10个存储空间。
+varchar(n): 可变字符串，当要保存数据小于n的时候，则按照实际长度进行保存数据。
+比如：保存'liu',占据3个存储空间。
+varchar2(n): Oracle自行定义的类型，跟varchar功能相似，但是兼容性更好，在企业中一般使用varchar2取代varchar
+
+2) 数值类型：number
+number可以保存整数和小数。
+a) number(n): 用来保存整数，该整数最大的位数是n
+number(3) : 最多保留3位的整数
+b) number(n,m): n表示有效数字的最大的位数,m表示小数的最大的位数，整数最大的位数
+n-m
+number(7,2): 7表示数据有效数字最多7位，2表示小数位数最多2位，整数的最大的位数是
+5。
+
+3) 日期时间型：date
+date：指代日期类型，默认包含(世纪)，年，月，日，时，分，秒
+默认的日期格式：
+DD-MON月-YY
+DD： 几号
+MON月： 月份
+YY： 2位的年份
+eg: 12-11月-99  ---》 1999-11-12
+to_char():用于显示当前的日期，把Date类型的数据转换为char类型的数据。
+to_date(): 用于把char类型的数据转换为Date类型的数据。
+
+6 创建表
+格式：
+create table 表名(
+  列名1 数据类型 primary key,
+  列名2 数据类型,
+  列名3 数据类型,
+  ...
+  列名n 数据类型
+);
+ create table person1(
+ id number(4) primary key,
+ name varchar2(50),
+ age number(3)
+ );
+
+create table person2(
+id number(4) primary key,
+name varchar2(50)
+);
+create table person3(
+id number(4) primary key,
+name varchar2(50),
+age number(3),
+address varchar2(50)
+);
+案例：创建一张表customer（顾客）,
+cid number(4) 顾客编号 主键，
+cname varchar2(50)  顾客名字,
+sex char(2) 性别,address varchar2(50) 地址,phone char(11),email varchar2(50)
+create table customer(
+cid number(4) primary key,
+cname varchar2(50),
+sex char(2),
+address varchar2(50),
+phone char(11),
+email varchar2(50)
+);
+长度固定的字符串，建议使用char类型进行保存。
+案例：创建一张book表，bid number(4) 主键，bname varchar2(50) 书名，
+pub varchar2(50) 出版社,
+author varchar(2) 作者,
+type varchar2(20) 类型,
+numinput number(10) 进货量,
+numstore number(10) 库存量
+create table book(
+bid number(4) primary key,
+bname varchar2(50),
+pub varchar2(50),
+author varchar2(50),
+type varchar2(20),
+numinput number(10) ,
+numstore number(10)
+)
+
+7 查看表结构：
+desc 表名;
+案例：查询book，customer，person3表结构
+desc book;
+desc customer;
+desc person3;
+
+8 插入语句（insert）：往表中插入数据。
+1）向所有的列插入数据
+a）格式：
+insert into 表名 values(列值1,列值2...);
+b）values中列值的顺序必须跟表结构一一对应。
+c）每次执行insert语句，如果一切正确会往表中插入一条数据，反之如果任意一个位置出现了错误，则整条数据都无法插入进行。
+d）同一条插入语句，不要反复的执行，表中不能出现重复的数据（主键所在的列的列值必须是唯一的）。
+select * from 表名; 查询该表中所有的数据
+SQL> insert into person1 values(5,'张三丰',100);
+
+已创建 1 行。
+
+SQL> insert into person1 values(6,'张翠山',26);
+
+已创建 1 行。
+
+SQL> insert into person1 values(7,'张无忌',21);
+
+已创建 1 行。
+
+2）向指定列插入数据
+a) 格式：
+insert into 表名(列名1,列名2,列名3...)
+values(列值1,列值2,列值3...)
+b) 表名(列名...)中列名必须values中列值一一对应
+insert into person1(id,name) values(9,'独孤求败');
+insert into person1(id,age) values(10,46);
+insert into person1(id) values(11);
+
+
+9 修改语句（update）
+1）格式：
+update 表名 set 列名1=该列新值,
+列名2=该列新值,....列名n=该列新值
+where 条件
+2）根据where条件修改表中的数据，如果没有where条件，则整张表中所有的数据都要进行修改。
+3）通过update语句可以修改表中1条或者多条数据。
+update person2 set name = '刘备',id = 10
+where name = '曹操';
+update person2 set name = '夏侯渊'
+where id = 2;
+
+案例：根据条件修改person1表中的数据
+修改id是5的数据中，姓名改为'任我行',
+年龄改为39
+update person1 set name = '任我行',
+age = 39
+where id = 5;
+修改姓名是‘张翠山'的数据，把id改为20，
+年龄改为19
+update person1 set id = 20,age = 19
+where name = '张翠山';
+把person1所有的数据的年龄全部改为20
+update person1 set age = 20;
+
+修改id为7的数据，把id改为100，姓名改为杨过，年龄改为21
+update person1 set id = 100,
+name = '杨过'
+where id = 7;
+修改姓名是独孤求败，把年龄改为35
+update person1 set age = 35
+where name = '独孤求败';
+修改id=10的信息，把姓名改为房玄龄
+update person1 set name ='房玄龄'
+where id = 10;
+
+10 删除语句
+1) 使用delete删除
+格式：delete from 表名 where 条件
+根据where条件，删除表中的数据，如果没有where条件，删除表中所有的数据。
+delete from person1 where id = 11;
+delete from person1
+where name = '房玄龄';
+delete from person1 
+where name = '任我行';
+delete from person1;
+
+
+
+
+	 

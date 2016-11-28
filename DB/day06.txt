@@ -1,0 +1,360 @@
+2016年8月29日     星期一    刘英谦
+
+知识点：
+1 标准SQL的连接查询语句（标准SQL可以再任何的数据库中使用）
+1）左外连接查询：以左表为主，查询左表中所有的数据以及与之关联的右表中的数据。
+格式：
+select 别名1.*/列名,别名2.*/列名
+from 左表 别名1 left (outer) join 
+右表 别名2
+on 关联条件
+案例：查询emp表中所有员工的编号，姓名，以及所属部门的编号，名称，地址
+select e.empno,e.ename,d.*
+from emp e left join dept d
+on e.deptno = d.deptno
+案例：查询dept表中所有的部门的编号，名称以及该部门的员工的编号，姓名，职位，工资，根据部门的编号进行降序排列，如果部门编号一致，根据工资进行升序排列
+select d.deptno,d.dname,e.empno,
+e.ename,e.job,e.sal
+from dept d left join emp e
+on d.deptno = e.deptno
+order by d.deptno desc,e.sal 
+案例：查询emp表中所有员工的编号，姓名，职位，工资以及上级领导的编号，姓名，职位，工资，根据员工的编号进行升序排列。
+select e.empno,e.ename,e.job,e.sal,
+m.empno,m.ename,m.job,m.sal
+from emp e left join emp m
+on e.mgr = m.empno
+order by e.empno 
+案例：查询emp表中所有员工的编号，姓名，工资，入职时间以及该员工工资的等级，该等级最高工资和最低工资，根据工资的等级进行
+升序排列，如果等级一致，根据工资进行降序排列
+select e.empno,e.ename,e.sal,e.hiredate,
+s.*
+from emp e left join salgrade s
+on e.sal between s.losal and s.hisal
+order by s.grade,e.sal desc 
+2) 右外连接查询：以右表为主，查询右表中所有的数据以及与之关联的左表中的数据。
+格式：
+select 别名1.*/列名,别名2.*/列名
+from 左表 别名1 right （outer） join 
+右表 别名2
+on 关联条件
+案例：查询emp表中所有员工的编号，姓名，工资以及所属部门的编号，地址
+select e.empno,e.ename,e.sal,d.deptno,
+d.loc
+from dept d right join emp e
+on d.deptno = e.deptno
+案例：查询dept表中部门编号不是20号部门的所有的部门的所有信息，以及该部门下所有员工的编号，姓名。
+select d.*,e.empno,e.ename
+from emp e right join dept d
+on d.deptno = e.deptno
+where d.deptno != 20
+案例：查询emp表中名字不是以'S'开头的所有的员工的编号，姓名，职位以及上级领导的编号，姓名，职位，根据员工的编号进行降序排列。
+select e.empno,e.ename,e.job,e.mgr,
+m.ename,m.job
+from emp m right join emp e
+on m.empno = e.mgr
+where e.ename not like 'S%'
+order by e.empno desc
+3) 全外连接查询：查询两张表中所有的数据（查询有关联关系的数据，也要查询没有关联关系的数据）
+select 别名1.*/列名,别名2.*/列名
+from 左表 别名1 full outer join
+右表 别名2
+on 关联条件
+案例：查询emp表中所有员工的编号，姓名，职位，入职时间以及dept表中所有部门的所有信息
+select e.empno,e.ename,e.job,e.hiredate,
+d.*
+from emp e full outer join dept d
+on e.deptno = d.deptno
+4) 内连接的第2种格式
+内连接：只查询两张表中有关联关系的数据。
+select 别名1.*/列名 , 别名2.*/列名
+from 表1 别名1 inner join 表2 别名2
+on 关联条件
+案例：查询emp表中员工的编号，姓名，职位以及该员工所属部门的编号，名称
+select e.empno,e.ename,e.job,d.deptno,
+d.dname
+from emp e inner join dept d
+on e.deptno = d.deptno
+select e.empno,e.ename,e.job,d.deptno,
+d.dname
+from emp e,dept d
+where e.deptno = d.deptno
+
+2 视图：视图是一张虚拟表，通过视图查询一张或者多张表中的数据。
+1）视图中不存储任何物理数据，仅仅是用来查看数据的窗口，所以删除一个视图，对表中的数据没有任何的影响。
+2）视图中的数据都是来源于基本表，使用视图的时候被动态引用生成。使用视图可以集中、简化、定制用户的数据的显示，用户可以通过视图来访问表中的数据，而不需要直接去访问基本类。
+3）创建视图的格式：
+create view 视图名称
+as
+查询语句
+案例：创建一个视图view_emp1，查询emp表中所有的数据，以查询结果作为view_emp1视图
+create view view_emp1
+as
+select * from emp
+视图的使用跟使用表一样的。
+案例：通过视图查询emp表中所有的数据
+select * from view_emp1
+案例：通过view_emp1视图，查询emp表中工资在1000~3000之间所有员工的编号，姓名，入职时间，所属部门的编号。
+select empno,ename,hiredate,deptno
+from view_emp1
+where sal between 1000 and 3000 
+案例：创建一个视图view_emp2,查询emp表中所有员工的编号，姓名，职位，工资，以及所属的部门的编号，名称，查询的结果作为视图view_emp2
+create view view_emp2
+as
+select e.empno,e.ename,e.job,e.sal,
+d.deptno,d.dname
+from emp e left join dept d
+on e.deptno = d.deptno
+案例：查询emp表中工资在1000~2500之间所有员工的编号，姓名，职位，工资以及所属部门的名称，并根据员工的编号降序排列
+select empno,ename,job,sal,dname
+from view_emp2
+where sal between 1000 and 2500
+order by empno desc
+--方法1
+select e.empno,e.ename,e.job,e.sal,
+d.dname
+from emp e left join dept d
+on e.deptno = d.deptno
+where e.sal between 1000 and 2500
+order by e.empno desc
+案例：创建视图view_emp3，查询emp表中所有员工的所有信息以及该员工工资的等级，以及该等级的最低和最高工资。
+create view view_emp3
+as
+select e.*,s.*
+from emp e left join salgrade s
+on e.sal between s.losal and s.hisal
+案例：查询emp表中所有员工的编号，姓名，职位，工资，入职时间以及该工资的等级，最后根据工资的等级进行降序排列，如果等级一致，根据员工的编号也进行降序排列。
+select empno,ename,job,sal,hiredate,
+grade
+from view_emp3
+order by grade desc,empno desc
+
+4) 修改视图
+create or replace view 视图名称
+as
+查询语句
+案例：修改view_emp1
+create or replace view view_emp1
+as
+select empno,ename,job,hiredate,mgr,sal
+from emp
+where ename not like '%S%'
+
+5) 通过视图实现对表的插入，修改，删除操作
+create view view_dept
+as
+select * from dept
+a) 插入操作：insert
+insert into view_dept
+values(70,'财务部门','杭州')
+b) 修改操作：update
+update view_dept set dname = '销售部门',loc = '香港'
+where deptno = 50
+c) 删除操作：delete
+案例：通过视图view_dept删除dept表中50号，60号，70号部门
+delete from view_dept
+where deptno in(50,60,70)
+
+6) 只读视图：只能通过视图查询表中的数据，不能通过视图对表进行任何插入，修改，删除操作（防止通过视图修饰数据）
+格式：
+create view 视图名称
+as
+查询语句
+with read only
+create view view_dept2
+as
+select * from dept
+with read only
+--反例
+delete from view_dept2
+
+7 删除视图：
+drop view 视图名称
+drop view view_dept
+案例：删除view_emp1,view_emp2,view_emp3视图
+drop view view_emp1
+drop view view_emp2
+drop view view_emp3
+
+3 外键约束：用来维护两张表之间关联关系，使用外键修饰的列，该列的列值必须要依赖与之关联另外一张表中主键所在的列的列值。
+子表：外键所在的表，称为子类。
+主表（父表）：没有外键的表，称为主表，外键所修饰的列的列值，参照于主表中主键所在的列的列值。
+create table dept2(
+did number(4) primary key,
+dname varchar2(50) unique not null
+)
+create table emp2(
+eid number(4) primary key,
+ename varchar2(50) unique not null,
+age number(3),
+deptId number(4)
+)
+alter table emp2
+add constraint fk_deptId_emp2_dept2
+foreign key(deptId) 
+references dept2(did)
+--反例
+insert into emp2
+values(1,'刘备',39,1)
+先往主表中插入数据，然后再往子表中插入数据。
+insert into dept2
+values(1,'销售部门')
+insert into emp2
+values(1,'刘备',39,1)
+
+4 事务：把一些连续的操作封装到一起，要么一起成功，要么一起失败。
+create table worker16(
+id number(4) primary key,
+name varchar2(50)
+)
+1) commit：提交事务，把之前对表的所有修改操作真实的执行，把硬盘中表中数据真实的发送改变。
+   rollback: 回滚(回退)事务，撤销所有未提交的操作（还原没有提交事务的操作）。
+SQL> create table worker16(
+  2  id number(4) primary key,
+  3  name varchar2(50)
+  4  );
+
+表已创建。
+
+SQL> insert into worker16 values(1,'甘宁');
+
+已创建 1 行。
+
+SQL> insert into worker16 values(2,'孙尚香');
+
+已创建 1 行。
+
+SQL> select * from worker16;
+
+        ID NAME
+---------- ------------------------------------
+         1 甘宁
+         2 孙尚香
+
+SQL> commit;
+
+提交完成。
+
+SQL> insert into worker16 values(3,'周泰');
+
+已创建 1 行。
+
+SQL> insert into worker16 values(4,'吕布');
+
+已创建 1 行。
+
+SQL> insert into worker16 values(5,'貂蝉');
+
+已创建 1 行。
+
+SQL> select * from worker16;
+
+        ID NAME
+---------- ------------------------------------
+         1 甘宁
+         2 孙尚香
+         3 周泰
+         4 吕布
+         5 貂蝉
+
+SQL> rollback;
+
+回退已完成。
+
+SQL> select * from worker16;
+
+        ID NAME
+---------- ------------------------------------
+         1 甘宁
+         2 孙尚香
+
+2）使用事务的目的：
+银行表
+账号    姓名     余额
+1000   刘英谦   1000000000000000.0
+1001   范冰冰   10.0
+把账号是1000的专户中转给账号1001专户转给10.0
+第1个步骤：1000账户减去10
+update 银行表 set 余额 = 余额 - 10
+where 账号 = 1000
+
+
+第2个步骤：1001账户加上10
+update 银行表 set 余额 = 余额 + 10
+where 账户 = 1001
+commit;
+把减钱和加钱都放到一个事务内，一起提交，要么都成功，要么都失败
+
+5 子查询（嵌套查询）：在一条查询语句的内部又包含一条查询语句。
+案例：查询工资高于平均工资的所有员工的姓名，职位，工资
+1）求出emp表中员工的平均工资
+select avg(sal) from emp  --2077
+2）高于平均工资的员工的信息
+select ename,job,sal from emp
+where sal > (
+   select avg(sal) from emp
+)
+案例：查询工资高于20号部门最高工资的员工的所有信息
+1）查询20号部门最高工资
+select max(sal) from emp
+where deptno = 20
+2）查询高于20号部门最高工资的员工信息
+select * from emp
+where sal > (
+   select max(sal) from emp
+   where deptno = 20
+)
+案例：查询emp表中姓名是’KING‘所属的部门的编号，名称
+1）查询'KING'所属部门的编号
+select deptno from emp
+where ename = 'KING'
+2）根据部门编号查询dept表中部门的信息
+select deptno,dname from dept
+where deptno = (
+   select deptno from emp
+   where ename = 'KING'
+)
+案例：查询部门名称是SALES的部门下所有员工的编号，姓名，职位，以及所属部门的编号
+1）查询部门名称是SALES的部门的编号
+select deptno from dept
+where dname = 'SALES'
+2）根据部门的编号查询该部门下员工的信息
+select empno,ename,job,deptno 
+from emp
+where deptno = (
+   select deptno from dept
+   where dname = 'SALES'
+)
+案例：查询部门地址是DALLAS的部门下所有员工的所有信息
+1）查询地址是DALLAS部门的编号
+select deptno from dept
+where loc = 'DALLAS'
+2）根据部门的编号，查询该部门下员工的信息
+select * from emp
+where deptno in (
+   select deptno from dept
+   where loc = 'DALLAS'
+)
+案例：查询跟JONES同样工作的员工的所有信息（包含JONES）
+1）查询JONES的职位
+select job from emp
+where ename = 'JONES'
+2）根据职位查询该职位下所有员工的信息
+select * from emp
+where job = (
+  select job from emp
+  where ename = 'JONES'
+)
+不包含'JONES'
+select * from emp
+where job = (
+   select job from emp
+   where ename = 'JONES'
+) and ename <> 'JONES'
+
+
+
+
+
+
+
+

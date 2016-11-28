@@ -1,0 +1,324 @@
+2016年8月25日      星期四      刘英谦
+
+知识点：
+1 数值处理函数（二）：
+1）sqrt(数字)：求平方根
+select sqrt(100) from dual
+2）power(底数,指数)：求出乘方
+select power(10,3) from dual
+3）to_number('字符串')：把字符串转换为数字
+select to_number('100')+100 from dual
+
+2 约束：设计表的时候制定一些规则，插入表中的数据必须要满足这些规则才可以插入进去。而这些规则就是约束。不满足约束的数据无法插入表中。
+Oracle中常用的约束：
+主键约束
+唯一约束
+检查约束
+外键约束
+默认值约束
+非空约束
+
+3 主键约束：被主键约束所修饰的列，该列的列值非空而且唯一。通过主键约束，用来防止表中出现两条完全相同的数据（避免冗余）。
+1）一张表中只有一个主键约束。
+2）可以指定一个列或者多个列被主键约束所修饰。两个列或者更多列被主键约束所修饰的称为联合主键（复合主键）。
+3）创建表的时候指定主键约束
+create table worker1(
+id number(4) primary key,
+name varchar2(50),
+age number(3)
+)
+insert into worker1 values(1,'甘宁',27)
+反例：
+insert into worker1 values(1,'黄忠',39)
+4) 创建表的同时指定主键约束名字
+create table worker2(
+  id number(4) constraint pk_id_w2
+		         primary key,
+  name varchar2(50),
+  age number(3)
+)
+insert into worker2 values(1,'马腾',45)
+反例：
+insert into worker2 values(1,'马超',21)
+5) 在所有列定义的后面设置主键，企业中经常使用这种方法来设置联合主键。
+create table worker3(
+id number(4),
+name varchar2(50),
+age number(3),
+address varchar2(50),
+constraint pk_id_name_w3 
+		primary key(id,name)
+)
+被联合主键所修饰列，所有列的列值不能完全一样
+insert into worker3 
+values(1,'曹休',23,'许昌')
+insert into worker3
+values(1,'曹植',16,'洛阳')
+--反例：
+insert into worker3
+values(1,'曹植',23,'陈留')
+
+6) 修改表时候添加主键约束
+格式：
+alter table 表名 
+add constraint 约束名 
+primary key(列名1,列名2...)
+create table worker4(
+id number(4),
+name varchar2(50),
+age number(3)
+)
+alter table worker4 
+add constraint pk_id_w4 primary key(id)
+案例：创建一张表worker5，id number(4),
+name varchar2(50),sex char(2),
+age number(3),address varchar2(50),在修改表的时候，指定id和name使用主键约束
+pk_id_name_w5进行修饰。
+create table worker5(
+id number(4),
+name varchar2(50),
+sex char(2),
+age number(3),
+address varchar2(20)
+)
+alter table worker5
+add constraint pk_id_name_w5
+primary key(id,name)
+
+7 删除主键：
+1）格式1：可以删除大部分的约束
+alter table 表名 drop constraint 约束名
+案例：删除worker5中的主键约束PK_ID_NAME_W5
+alter table worker5 
+drop constraint PK_ID_NAME_W5
+案例：删除worker3和worker4中主键约束 
+alter table worker3
+drop constraint PK_ID_NAME_W3
+alter table worker4
+drop constraint PK_ID_W4
+2) 格式2：只能用于删除主键约束
+alter table 表名 drop primary key
+alter table worker1 drop primary key
+
+4 唯一约束：用于指定一个或者多个列的组合值具有唯一性，防止用户在该列上输入重复的列值。
+1）使用唯一约束修饰的列，该列可以插入空值。
+2）一张表中可以有多个唯一约束。
+3）唯一约束不能修饰主键所在的列上。
+create table worker7(
+id number(4) primary key,
+name varchar2(50) unique
+)
+insert into worker7 values(1,'魏延')
+insert into worker7 values(2,null)
+反例：
+insert into worker7 values(3,'魏延')
+4) 修改表的时候添加唯一约束：
+格式：
+alter table 表名
+add constraint 约束名
+unique(列名1,列名2...列名n)
+create table worker6(
+id number(4) primary key,
+name varchar2(50),
+age number(3)
+)
+alter table worker6
+add constraint uq_name_w6 
+unique(name)
+案例：创建一张表worker8，id number(4)
+主键，name varchar2(50)，password
+varchar2(50),age number(3),phone
+char(11),在修改表的时候，指代name和password都使用一个唯一约束
+uq_name_password_w8修饰
+create table worker8(
+id number(4) primary key,
+name varchar2(50),
+password varchar2(50),
+age number(3),
+phone char(11)
+)
+alter table worker8
+add constraint uq_name_password
+unique(name,password)
+5) 删除唯一约束：
+格式：alter table 表名
+       drop constraint 约束名
+案例：删除worker6，worker8中的唯一约束
+alter table worker6
+drop constraint UQ_NAME_W6
+alter table worker8
+drop constraint UQ_NAME_PASSWORD
+6) 主键约束和唯一约束之间的区别：
+a) 一张表中只能定义一个主键约束，但可以定义多个唯一约束。
+b) 主键所修饰的列，列值必须是非空而且唯一，而唯一约束修饰的列，列值必须唯一，但是可以为null
+
+5 日期处理函数：主要用来修饰date类型的数据
+1）日期的格式：
+a）年月日： yyyy-mm-dd
+b）年月日时分秒：yyyy-mm-dd hh24:mi:ss
+c）Oracle默认的日期格式：
+DD-MON月-YY
+2）sysdate：当前系统时间，以天为单位。
+select sysdate from dual
+案例：查询昨天，今天，明天
+select sysdate-1,sysdate,sysdate+1
+from dual
+3) 格式化的显示date类型数据
+a) 常见的日期格式：
+yyyy-mm-dd : 年月日
+y：年份
+m：月份
+d：几号
+eg：1999-12-11
+yyyy-mm-dd hh24:mi:ss  年月日 时分秒
+hh24： 24小时制
+mi：分钟
+ss：秒钟
+eg：2001-11-11 12:11:15
+b）to_char():把日期类型数据（date）转换为字符类型数据（char），便于操作和显示。
+to_char(date,'日期格式')
+select empno,ename,hiredate,
+to_char(hiredate,'yyyy-mm-dd')
+from emp
+案例：查询当前系统时间，用年月日时分秒格式显示。
+select sysdate,
+to_char(sysdate,
+	'yyyy-mm-dd hh24:mi:ss')
+from dual
+案例：查询emp表中员工的姓名，工资，以及入职的时间（年月日时分秒）
+select ename,sal,hiredate,
+to_char(hiredate,
+	'yyyy-mm-dd hh24:mi:ss')
+from emp
+c) 使用to_char函数获得日期的某一个部分
+案例：获得当前的月份
+select to_char(sysdate,'mm') from dual
+案例：查询emp表中12月份入职的员工的姓名，职位，工资，入职时间
+select ename,job,sal,hiredate from emp
+where to_char(hiredate,'mm') = '12'
+4) to_date函数：把char类型的日期数据，按照相应日期格式转换为date类型数据。
+to_date('日期格式字符串','日期格式')
+insert into emp(empno,ename,hiredate)
+values(1111,'周瑜',
+to_date('2001-11-11 11:12:15',
+'yyyy-mm-dd hh24:mi:ss'))
+案例：练习往emp表中插入date类型数据
+5555  诸葛亮  2011-12-13 16:17:21
+6666  吕布     2016-10-16 18:21:19
+insert into emp(empno,ename,hiredate)
+values(5555,'诸葛亮',
+to_date('2011-12-13 16:17:21',
+'yyyy-mm-dd hh24:mi:ss'))
+insert into emp(empno,ename,hiredate)
+values(6666,'吕布',
+to_date('2016-10-16 18:21:19',
+'yyyy-mm-dd hh24:mi:ss'
+))
+5) 使用默认日期格式插入date数据
+insert into emp(empno,ename,hiredate)
+values(9999,'曹操','20-11月-17')
+缺点：a) 年份默认最近的世纪（2017）
+       b) 无法插入时分秒
+6）months_between(d1,d2):日期d1和日期d2之间间隔了多少个月
+案例：查询emp表中员工一共工作了多少月
+select empno,ename,sal,hiredate,
+  months_between(sysdate,hiredate)
+from emp
+7）add_months(d1,数字)：在日期d1加上数字个月
+select sysdate,add_months(sysdate,12)
+from dual
+
+6 having子句：对分组以后的数据再次进行过滤，having子句经常跟聚合函数结合使用。
+1）格式：
+select 列名/聚合函数
+from 表名
+where 条件：对表所有的数据进行过滤
+group by 列名
+having 子句:对分组以后的数据再次进行过滤
+order by 列名/聚合函数/别名 asc/desc
+2) 执行顺序：首先执行where条件，然后执行group by 列名根据某一个列进行分组，之后执行having 子句，对分组以后的数据再次进行过滤，最后执行order by进行排序。
+案例：查询emp表中，每个部门的编号，人数，工资的总和，最高工资以及最低工资，过滤最高工资是5000的部门，根据部门的人数进行升序排列，如果人数一致，则根据最高工资进行降序排列。
+select deptno,count(*),sum(sal),max(sal),
+min(sal)
+from emp
+group by deptno 
+having max(sal) != 5000
+order by count(*),max(sal) desc
+案例：查询emp表中工资在1000~3000之间的员工信息，每个部门的编号，工资总和，平均工资，过滤掉平均工资低于2000的部门，按照平均工资进行升序排列
+select deptno,sum(sal),avg(sal)
+from emp
+where sal between 1000 and 3000
+group by deptno
+having avg(sal) >= 2000
+order by avg(sal) 
+
+案例：查询emp表中名字不是以'S'开头，每个职位的名字，人数，工资总和，最高工资，过滤掉工资是3000的职位，根据人数进行升序排列，如果人数一致，根据工资总和进行降序排列。
+select job ,count(*) ,sum(sal),max(sal)
+from emp
+where ename not like 'S%' and
+sal != 3000
+group by job
+order by count(*),sum(sal) desc
+
+案例：查询emp表的信息，每个职位的名称，人数，平均工资，最低工资，过滤掉平均工资是3000的职位信息，根据人数进行降序排列，如果人数一致根据平均工资进行升序排列
+select job,count(*),avg(sal),min(sal)
+from emp
+group by job
+having avg(sal) != 3000
+order by count(*) desc,avg(sal)
+总结：having子类经常跟聚合函数结合使用，如果没有使用到聚合函数，就要注意是否可以写在where条件中。
+7 序列：Oracle数据库中的一个数据库对象，通过序列可以生成自动增长的数字，经常利用序列生成的数字作为主键所在的列的列值。
+1）创建序列的格式
+create sequence 序列名称
+create sequence tid_seq1
+2）使用序列：nextval和currval
+a）nextval：使用序列生成新的数字，第1次使用的时候，返回是序列的初值（默认是1），从第2次开始，每次进行自增。
+select tid_seq1.nextval from dual
+b）currval：用于序列当前的数字
+select tid_seq1.currval from dual
+案例：创建一张表worker9，id number(4) 主键，name varchar2(50),创建一个序列
+tid_seq2,通过序列tid_seq2生成的数字作为主键所做的列的列值，往worker9中插入5条数据
+create table worker9(
+id number(4) primary key,
+name varchar2(50)
+)
+create sequence tid_seq2
+insert into worker9 
+values(tid_seq2.nextval,'张三')
+3) 序列中几个属性：
+a）序列初始值
+start with 初值 ： 第1次使用nextval返回的数字，默认是1。
+b）增长的步长：每次生成数值的增量
+increment by 增量
+c）序列最大值
+maxvalue 最大值
+d）序列最小值
+minvalue 最小值
+create sequence tid_seq3
+start with 1000
+increment by 10
+minvalue 1
+maxvalue 1000000000000
+
+select tid_seq3.nextval from dual
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

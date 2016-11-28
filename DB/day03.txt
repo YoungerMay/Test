@@ -1,0 +1,283 @@
+2016年8月24日     星期三      刘英谦
+
+知识点：
+1 逻辑运算符：and , or , not
+1) and :表示并且的关系
+案例：查询emp表中员工的编号，姓名，职位，工资，并且工资在1000~2000之间。
+select empno,ename,job,sal from emp
+where sal >= 1000 and sal <= 2000
+案例：查询emp表中员工在10号部门，并且含有上级领导的员工的姓名，职位，上级领导编号以及所属部门的编号
+select ename,job,mgr,deptno
+from emp
+where deptno = 10 and mgr is not null
+案例：查询emp表中名字中包含'E'，并且职位不是MANAGER的员工的编号，姓名，职位，以及工资。
+select empno,ename,job,sal from emp
+where ename like '%E%' and 
+job != 'MANAGER'
+
+2) or : 或者
+案例：查询emp表中10号部门或者20号部门中员工的编号，姓名，所属部门的编号
+select empno,ename,deptno from emp
+where deptno = 10 or deptno = 20
+案例：查询emp表中没有奖金或者名字的倒数第2个字母不是T的员工的编号，姓名，职位以及奖金
+select empno,ename,job,comm from emp
+where comm is null or 
+ename not like '%T_'
+案例：查询工资高于3000或者部门编号是30的员工的姓名，职位，工资，入职时间以及所属部门的编号
+select ename,job,sal,hiredate,deptno
+from emp
+where sal > 3000 or deptno = 30
+
+3) not : 非
+案例：查询不是30号部门的员工的所有信息
+select * from emp
+where deptno != 30
+select * from emp
+where not deptno = 30
+案例：查询奖金不为空的员工的所有信息
+select * from emp
+where comm is null
+select * from emp
+where not comm is null
+
+2 排序：针对查询回来的结果，根据某一个列或者某几个列的列值，进行升序或者降序的排列。
+1）格式1：
+select */列名 from 表名
+where 条件
+order by 列名 升序(asc)/降序(desc)
+案例：查询emp表中所有员工的编号，姓名，职位，根据员工的编号进行降序排列
+select empno,ename,job from emp
+order by empno desc
+案例：查询emp表中部门编号是10号或者30号中，所有员工姓名，职务，工资，根据工资进行升序排列
+select ename,job,sal from emp
+where deptno = 10 or deptno = 30
+order by sal 
+2) 默认就是升序排列。
+案例：查询emp表中员工的编号，姓名，入职时间以及所属部门的编号，根据部门编号进行升序排列。
+select empno,ename,hiredate,deptno
+from emp
+order by deptno 
+3) 格式3：
+select */列名 from 表名
+where 条件
+order by 列名1 asc/desc,列名2 asc/desc
+首先根据列名1中的列值进行升序或者降序排列，如果列名1中的列值出现一致的现象，则根据列名2中的列值进行升序或者降序排列。
+案例：查询emp表中所有的数据，然后根据部门的编号进行升序排列，如果部门编号一致，根据员工的编号进行降序排列
+select * from emp
+order by deptno asc,empno desc
+案例：查询emp表中工资高于1000或者没有上级领导的员工的编号，姓名，工资，所属部门的编号，以及上级领导的编号，根据部门编号进行降序排列，如果部门编号一致根据工资进行升序排列。
+select empno,ename,sal,deptno,mgr
+from emp
+where sal > 1000 or mgr is null
+order by deptno desc,sal 
+案例：查询emp表中名字中不包含S的员工的编号，姓名，工资，奖金，根据工资进行升序排列，如果工资一致，根据编号进行降序排列
+select empno,ename,sal,comm
+from emp
+where ename not like '%S%'
+order by sal , empno desc
+
+3 nvl函数：主要用于处理null值问题
+1）数字类型列值可以进行算术运算
+案例：查询emp表中员工的编号，姓名，工资，年薪（工资*12） 
+select empno,ename,sal,sal*12 年薪
+from emp
+案例：查询emp表中员工的编号，姓名，工资，年薪（工资*12+奖金）
+select empno,ename,sal,comm,
+sal*12+comm 年薪
+from emp
+2）在Oracle中任何数据如果使用“+”连接null，返回的结果也为null
+3）nvl函数：
+nvl(列名,数值)：如果列值为null，nvl函数返回是数值;反之如果列值不为null，则nvl函数返回是当前的列值。
+nvl(comm,0)
+年薪 = sal * 12 + nvl(comm,0)
+案例：查询emp表中所有员工的编号，姓名，职位，工资，奖金，年薪（工资*12+奖金）
+select empno,ename,job,sal,comm,
+sal*12+nvl(comm,0)
+from emp
+
+4 聚合函数（分组函数）：count(),sum(),
+avg(),max(),min()
+1) count(*/列名)：*，统计表中数据总条数;
+列名，统计该列中列值不为null的数据条数。
+案例：统计emp表中员工的总数量
+select count(*) from emp
+案例：统计emp表中获得奖金的员工的数量
+select count(comm) from emp
+案例：统计emp表中职位的个数
+select count(distinct job) from emp
+2) sun(列名)：求出该列所有列值累加之和。
+案例：求出emp表中所有的工资累加之和
+select sum(sal) from emp
+案例：求出emp表中所有的奖金累加之和
+select sum(comm) from emp
+3) avg(列名)：求出该列列值的平均值
+案例：求出emp表中员工的平均工资
+select avg(sal) 平均工资 from emp
+案例：求出emp表中员工的平均奖金
+select avg(comm) from emp
+4) max(列名)：求出该列的最大值
+案例：求出emp表中员工的最高工资
+select max(sal) from emp
+案例：求出emp表中员工编号的最大值
+select max(empno) from emp
+5) min(列名)：求出该列的最小值
+案例：查询emp表中员工的最低工资。
+select min(sal) from emp
+案例：查询emp表中员工的人数，工资的总和，平均工资，奖金的最大值，奖金的最小值,
+并且对返回的列起别名。
+select count(*) 人数,sum(sal) 工资总和,
+avg(sal) 平均工资,max(comm) 最高奖金,
+min(comm) 最低奖金
+from emp
+
+5 group by ：分组，根据某一个列，把数据分成几组
+1）格式：
+select 列名/聚合函数 from 表名
+where 条件
+group by 列名
+order by 列名/聚合函数/别名 asc/desc
+2）执行流程：首先执行where条件，对表中数据进行过滤，然后使用group by 进行分组，之后对每一组的数据使用聚合函数，最后执行order by进行排序。
+案例：查询emp表中每个部门的编号，人数，工资总和，最后根据人数进行升序排列，如果人数一致，根据工资总和降序排列。
+select deptno , count(*) 人数, sum(sal)
+from emp
+group by deptno
+order by 人数 , sum(sal) desc
+案例：查询工资在1000~3000之间的员工信息，每个部门的编号，平均工资，最低工资，最高工资，根据平均工资进行升序排列。
+select deptno,avg(sal),min(sal),max(sal)
+from emp 
+where sal>=1000 and sal<=3000
+group by deptno
+order by avg(sal)
+案例：查询含有上级领导的员工，每个职业的人数，工资的总和，平均工资，最低工资，最后根据人数进行降序排列，如果人数一致，根据平均工资进行升序排列
+select job,count(*),sum(sal),avg(sal),
+min(sal)
+from emp
+where mgr is not null
+group by job
+order by count(*) desc,avg(sal)
+
+6 between ... and ...
+案例：查询工资在1000~3000之间每一个员工的编号，姓名，职位，工资
+select empno,ename,job,sal from emp
+where sal >= 1000 and sal <= 3000
+select empno,ename,job,sal from emp
+where sal between 1000 and 3000
+在指定范围的时候，经常使用
+between 初值 and 终值
+[初值,终值]，表示初值~终值之间的每一个数值，等价于大于等于初值，并且小于等于终值
+案例：查询emp表中奖金在500~2000之间所有员工的编号，姓名，工资以及奖金
+select empno,ename,sal,comm from emp
+where comm between 500 and 2000
+
+
+7 in和not in
+案例：查询员工的编号是7369，7521，
+7654，7844，7902，7934的员工的所有的信息
+select * from emp
+where empno in(7369,7521,7654,7844,
+7902,7934)
+
+select * from emp
+where empno=7369 or empno = 7521
+or empno = 7654 or empno = 7844
+or empno = 7902 or empno = 7934
+1) 列名 in(列值1,列值2,列值3...列值n)，只要列匹配任何一个列值，该数据都可以查询出来，等价于多个or运算
+
+案例：查询emp表中，职位是ANALYST，
+MANAGER，PRESIDENT，SALESMAN的员工的所有的信息
+select * from emp
+where job in('ANALYST','MANAGER',
+'PRESIDENT','SALESMAN')
+2) not in :取出不符合列值的数据
+列名 not in(列值1,列值2,列值3...列值n)
+案例：查询emp表中职位不是ANALYST,
+MANAGER,SALESMAN的所有员工的信息
+select * from emp
+where job not in('ANALYST',
+'MANAGER','SALESMAN')
+
+8 字符处理函数
+1）字符处理函数主要用来处理char,varchar,
+varchar2
+2）lower(列名/字符串): 把列值/字符串中所有的大写字母改为小写字母
+案例：查询emp表中所有员工的姓名，把名字中所有的大写字母改为小写字母。
+select ename,lower(ename) from emp
+select lower('HELLO world') from emp
+
+3) dual: Oracle设计一个专门用来进行测试的虚拟表，只返回一个结果
+select lower('HELLO world') from dual
+
+4) upper(列名/字符串)：把列值/字符串中所有的小写字母改为大写字母
+select upper('helloworld') from dual
+
+5) length(列名/字符串)：统计列值/字符串中字符的个数。
+案例：查询emp表中所有员工名字中字符的个数
+select ename, length(ename) from emp
+
+6) substr()：用于截取字符串
+substr(参数1,参数2,参数3)
+参数1：表示要截取字符串或者列名
+参数2：如果为正数表示从正数的第几个字符开始截取，起始为1;如果为负数表示从倒数第几个字符开始往后截取。
+参数3：表示要截取字符的个数。
+select substr('helloworld',6,5) from dual
+select substr('helloworld',
+	length('helloworld')-1,2)
+from dual
+select substr('helloworld',-2,2) from dual
+案例：查询emp表中员工姓名的倒数后三个字符（两种方法）
+select ename,substr(ename,-3,3) 
+from emp
+select ename,
+substr(ename,length(ename)-2,3)
+from emp
+7) trim(列名/字符串): 删除列值/字符串两端的空格
+select trim('      hello    world       ') 
+from dual
+8) 连接字符串：
+a）使用||
+select '你好' ||' ,'||'天气不错' from dual
+select ename ||','|| job from emp
+b）concat(字符串1,字符串2)
+select concat('明天周四了','下周一讲完数据库') 
+from dual
+9）to_char():把其他类型的数据转换为字符类型
+select to_char(100) || '本小说' from dual
+
+
+9 数值处理函数:主要用来处理number类型的数据。
+1）abs(列名/数值)：求绝对值
+select abs(100) from dual
+select abs(-100) from dual
+2）mod(): 求余数
+select mod(10,3) from dual
+3）round(): 四舍五入函数
+round(数值,位数)：如果位数是正数，表示保留到小数点的第几位;如果位数是0，表示只保留整数;如果位数是负数，表示四舍五入到小数点前第几位。
+select round(45.926,2) from dual
+--45.93
+select round(45.926,1) from dual --45.9
+select round(45.926,0) from dual --46
+select round(45.926,-1) from dual --50
+select round(45.926,-2) from dual --0
+select round(55.926,-2) from dual
+4) trunc : 截取函数
+trunc(数值,位数)：如果位数是正数，表示保留几位小数;如果位数是0，表示舍弃所有的小数;如果位数是负数，表示舍弃小数点前第几位
+select trunc(45.926,2) from dual
+--45.92
+select trunc(45.926,1) from dual --45.9
+select trunc(45.926,0) from dual --45
+select trunc(45.926,-1) from dual --40
+select trunc(45.926,-2) from dual --0
+5) ceil(数值) ： 向上取整
+select ceil(1.111) from dual
+6) floor(数值)： 向下取整
+select floor(1.9999) from dual
+7) sign(数值)：判断数值正负0。如果数值为正数，返回值是1;如果数值为负数，返回值是-1;如果数值为0，则返回值是0
+select sign(100) from dual  --1
+select sign(-100) from dual -- -1
+select sign(0) from dual --0
+
+
+
+
+
+  

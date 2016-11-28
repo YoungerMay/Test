@@ -1,0 +1,498 @@
+复习：
+1、Linux常用命令：
+1）查看当前用户详细身份：id
+2）查看当前工作目录：pwd
+3）查看目录下内容的属性：ls -l
+查看目录下内容：文件或目录
+  -a   -al    -t    -lt   -F   -R    -ld 查看当前目录属性
+4）命令执行原理：可执行文件，运行后是进程
+ 结束当前终端进程：ctrl + c
+ 挂起进程：ctrl + z     jobs     fg 工作号
+5）等待：sleep 秒数
+6）查看命令的帮助手册：man 命令名     空格、回车、q
+7）清屏：clear
+8）查看磁盘分配情况：fdisk -l      df -k
+9）挂载：mount  分区设备名  目录名
+           mount  /dev/sda1   /boot
+10）查看小文件内容：cat 文件名 ...
+11）Linux/Unix/Windows通用的输出重定向：
+    >  覆盖   >>  追加
+12）创建目录：mkdir  目录路径名
+13）创建文件：touch  文件路径名
+14）拷贝文件：cp  源文件路径名  新路径名
+      目的：备份
+15）移动/重命名：mv  源文件路径名  新路径名
+      本质：改变绝对路径名
+16）删除文件：rm  文件路径名
+                 rm -f  文件路径名    关闭交互
+# rm 11.txt     交互  y 删除  n 不删除
+# rm  *.txt      * 通配符 任意多个字符
+# rm -f *.txt   关闭交互
+17）删除空目录：rmdir  目录名
+# cd ..
+# rm d2   不能删除  
+# rm d1   可以删除  空的
+18）删除非空目录：rm -r  目录名     存在交互
+                      rm  -rf  目录名   关闭交互
+# rm -r d2      y  n
+# rm -rf d2
+
+注意：如果是root用户，超级用户、超级管理员，拥有系统所有权限，千万不能随便删东西。
+ 比如在/目录下，rm *  删除所有内容，很危险。
+建议：平时使用普通账号登录，在需要时才变为root身份管理，防止误操作。
+
+一、用户和组的管理
+Linux/Unix是多用户系统
+ root用户拥有最高权限，其它用户及权限都由root来管理。
+比较Windows系统：
+ 控制面板->管理工具->计算机管理->本地用户和组  
+   ->右击某用户->属性->隶属于（属于哪个组）从属关系
+1、添加用户：useradd  用户名   （只能由root操作）
+# useradd xiaohong
+ 不写组，会自动生成一个组，组名就是用户名；
+ 自动在/home下为xiaohong用户创建一个主目录，目录名也是xiaohong，/home/xiaohong目录就是xiaohong用户的主目录。xiaohong登录成功后默认在自己主目录中，拥有较多权限。
+                  属主     属组
+drwx------ 2 xiaohong xiaohong  4096 10月 20 09:44 xiaohong  主目录名
+
+2、创建密码：passwd  用户名
+# id    是root
+# passwd  xiaohong     设置密码123  123
+ 
+清口令（密码）：
+# passwd -d xiaohong
+# passwd  xiaohong     再设置为123
+
+3、切换用户（改变身份）：su  用户名
+目的：获取某个用户的权限，以某用户身份对系统进行管理
+习惯：平时常用普通用户登录，当希望具有root权限或其他用户权限时，可以使用su切换。
+规律：从root切换到普通用户不需要密码，但从普通用户切换到root或其他用户，需要密码。
+
+练习：从root切换到xiaohong，从xiaohong切换到root
+查看最初登录身份：who am i
+查看当前用户名：whoami
+查看当前用户详细身份：id
+# su xiaohong
+# exit   返回
+
+$ su    变为root，直接使用su
+密码: 123456
+
+二、案例：
+1、添加boys组：groupadd  组名
+# groupadd  boys
+2、添加girls组：
+# groupadd  girls
+3、查看组信息配置文件： /etc/group
+# cat  /etc/group
+组名   组id(gid)
+root:x:0:root
+...
+xiaohong:x:500:
+boys:x:501:
+girls:x:502:
+
+4、添加用户tom到boys组：useradd -g 组名  用户名
+# useradd  -g  boys  tom
+# passwd  tom      密码：123
+
+5、添加用户alice和rose到girls组：
+# useradd  -g  girls  alice
+# useradd  -g  girls  rose
+# passwd  alice   密码：123
+# passwd  rose   密码：123
+
+6、查看用户账户基本信息：/etc/passwd
+# cat /etc/passwd
+用户名:口令占位符:uid:gid:描述:主目录:登录shell
+root:x:0:0:root:/root:/bin/bash
+...
+xiaohong:x:500:500::/home/xiaohong:/bin/bash
+tom:x:501:501::/home/tom:/bin/bash
+alice:x:502:502::/home/alice:/bin/bash
+rose:x:503:502::/home/rose:/bin/bash
+
+补充：/etc/shadow   保存账户口令（密码）
+普通用户不可读，root用户可以读取
+# cat /etc/shadow
+密码经过MD5加密
+
+7、用alice用户身份，在其主目录下创建1.txt文件
+# id            是root
+# su alice     不用密码
+$ cd           到alice的主目录下  /home/alice
+$ touch 1.txt  空文件
+$ ls -l
+-rw-r--r--   1 alice   girls      0 10月 20 10:52 1.txt
+
+8、使用vi编辑器，编辑1.txt   (vi基本使用)
+1）vi  1.txt     处于命令模式
+2）敲i键，切换到输入模式   （关注左下角 显示 插入）
+3）输入I am alice!
+4）敲Esc键，由输入模式->命令模式
+5）敲:键（shift + ;），进入底行模式（冒号模式）
+6）冒号后输入 wq 回车，表示保存并退出（Write  Quit）
+7）注意：如果保存文件出现问题，可以强制不保存退出
+    Esc  冒号模式: q!
+
+9、尝试让tom去查看并修改alice的1.txt文件？
+$ id      是xiaohong 
+$ su tom   密码：123
+$ cd /home
+$ ls
+$ cd alice        bash: cd: alice: 权限不够
+$ ls -l
+文件类型 权限   属主   属组                    文件/目录名
+drwx------  2 alice    girls   4096 10月 20 11:03 alice
+drwx------  2 rose     girls   4096 10月 20 10:40 rose
+drwx------  2 tom     boys    4096 10月 20 10:37 tom
+
+三、文件/目录的权限：
+1、user    所有者（属主、文件的创建人） u
+2、group   所有者所在的组    g
+比如：root用户属于root组
+       xiaohong用户属于xiaohong组
+       tom用户属于boys组
+       alice、rose属于girls组
+3、other   其他  o    既不是user，也不是group
+
+ls -l 开始的10个字符：
+       文件类型           文件/目录权限
+       -  文件           ---   ---    ---
+       d  目录         所有者 同组人 其他人
+
+4、三种访问权限：r 可读   w 可写   x 可执行
+                    Read     Write     eXcute
+ rwx --- ---  出现的位置固定 rwx 缺失使用-代替
+ r 可读    r-- 
+ w 可写   -w-    
+ x 可执行 --x
+
+ - rw- r-- r--   普通文件：权限  644
+ 自己：可读、可写   同组：只读   其他：只读
+
+ d rwx r-x r-x   目录：权限   755
+ 自己：可读、可写、可执行
+ 同组：可读、可执行      其他：可读、可执行
+
+ - rwx rwx rwx   可执行文件  777
+ 对所有用户：可读、可写、可执行
+权   权限的数字表达法
+421
+000  0   ---
+001  1   --x
+010  2   -w-
+011  3   -wx
+100  4   r--
+101  5   r-x
+110  6   rw-
+111  7   rwx
+
+将十进制数97 -> 二进制数  01100001
+   97 = 64 + 32 + 1
+128 64 32 16 8 4 2 1
+01100001
+
+将十进制数237 -> 二进制数 11101101
+  237 = 128 + 64 + 32 + 8 + 4 + 1
+128 64 32 16 8 4 2 1
+11101101
+
+笔试题： 
+ Linux操作系统中，test用户有一个文件1.txt，该文件的权限是：用户和他所在的组具有读写执行权限，其他用户只有读的权限，用数值形式表示该权限，则该八进制数是：774
+A. 224   B. 662   C. 442    D. 774
+ - rwx rwx r--
+
+0   1
+1   2
+2   4
+3   8
+4   16
+5   32
+6   64
+7   128
+8   256
+9   512
+10 1024
+11 2048
+12 4096
+...
+15 32768
+16 65536
+..
+31 2147483648
+
+5、归纳文件和目录的各种权限规律：
+1）文件的权限：
+ r  可读：可以使用vi、cat查看文件的内容   Disk Input
+ w 可写：可以修改后保存（写磁盘）  Disk Output
+ x 可执行：可以直接运行  命令就是可执行文件
+
+2）目录的权限：
+ r  可读：ls 查看目录的内容
+ w 可写：可以修改目录下内容，新建、删除内容
+ x 可执行：可以cd进去
+
+drwx------  700
+drwx-----x  701
+
+6、修改文件/目录权限的命令：chmod  规则  文件/目录名
+角色：u   user 自己人 
+       g   group 同组人
+       o   other 其他人
+       a   all    所有人
+举例： - rwx rwx rwx
+# chmod  u+x  1.txt  针对自己添加可执行权限
+# chmod  u-x  1.txt  针对自己去除可执行权限
+# chmod  g+w  1.txt  针对同组增加可写权限
+# chmod  a+r, g+w 1.txt  所有人都可读，同组可写
+# chmod  777  1.txt    数字表达法
+# chmod  644  1.txt
+        - rw- r-- r--
+前提：只有文件/目录的拥有者、root用户可以改权限。
+
+练习：由root或alice修改alice主目录的权限，让tom能cd进入。
+之前：drwx------   700
+目标：drwx-----x   701
+$ id   是alice
+$ cd   到/home/alice
+$ ls -ld    查看当前目录alice的属性（权限）
+$ chmod  o+x   .
+或 chmod  701  .
+
+练习：让tom能够看到alice目录下的内容  ls 或 ls -l
+目前：drwx-----x   701
+目标：drwx---r-x   705
+$ id   是alice
+$ cd
+$ chmod  o+r  .   或  chmod 705 .
+
+练习：让tom能够查看1.txt内容
+1.txt权限：-rw-r--r--   644     tom属于o 可读
+对比：为什么tom可以读取/etc/passwd内容，不能读取/etc/shadow? root都可以？
+$ ls -l /etc/passwd
+-rw-r--r--    1 root     root         1439 10月 20 10:40 /etc/passwd
+$ ls -l /etc/shadow
+-r--------    1 root     root         1024 10月 20 10:40 /etc/shadow
+
+练习：让tom能够改写1.txt的内容
+$ id  是tom
+$ date >> 1.txt
+
+-rw-r--r--   644
+-rw-r--rw-   646    
+$ id  是alice
+$ chmod o+w 1.txt   或  chmod 646 1.txt
+
+练习：由root或alice授权，让同组人、其他人都可进入alice主目录，都能查看内容并修改1.txt的文本。
+$ id  是alice
+$ cd  到/home/alice
+$ ls -ld     权限：drwx---r-x   705
+              目标：drwxr-xr-x   755
+$ chmod 755 .
+$ ls -l 1.txt  权限：-rw-r--rw-  646
+               目标：-rw-rw-rw-   666
+$ chmod 666 1.txt
+
+举例：alice准备一个可执行文件f1，让所有人都可执行
+$ id  是alice
+$ cd 
+$ vi  f1
+编辑：
+ date
+ sleep 10
+ cal
+$ f1   命令找不到
+$ ./f1  找到了，但没有执行权限
+将f1改为可执行：
+  -rw-r--r--  644
+  -rwxr-xr-x  755
+$ chmod a+x f1
+  或 chmod 755 f1
+
+阅读以下shell脚本sum.sh，分析脚本的功能：
+   求出1~100的累加和  结果5050
+#!/bin/bash
+sum=0
+i=1
+while (($i<=100))
+do
+  sum=$(($sum +$i))
+  i=$(($i+1))
+done
+echo "Sum=$sum"
+
+思路：当手工管理系统比较繁琐时，建议使用shell脚本，将固定流程编写脚本，后续可重复使用。（自动化）
+
+四、查看文件内容方式的总结：cat  more  vi  head tail
+1、cat  适合看小文件，不可翻页，不可编辑
+   cat f1 f2 f3  将多个文件内容依次显示
+技巧：可以将多个文件合并成一个大文件
+   cat f1 f2 f3 > f4
+
+2、more 适合看大文件，可以翻页，不可编辑
+ 空格  翻页
+ 回车  跳行
+ b      向前一屏
+ f      后一屏
+ h      求助
+ q      退出
+ /      查找文本
+ n      继续查询
+
+将/etc/passwd文件拷贝到alice的主目录下：
+$ cp  /etc/passwd  ~
+
+$ cat passwd
+$ more passwd
+
+3、vi  功能强大文本编辑器(Unix/Linux)  vim等都是对vi的加强版
+关注三种模式：如何切换
+
+                回车                 i a o O
+    底行模式  ---->   命令模式   ---->  输入模式
+               <----   (初始模式) <----
+              :  /  ?                  Esc 
+
+常用的操作命令：
+          O
+      i  光标 a
+          o          变为输入模式，光标停留位置不同
+  向上  k
+  向下  j
+  向左  h
+  向右  l    用小键盘方向键也可
+  到行首  ^
+  到行尾  $
+  到第5行   5G
+  屏首       H
+  屏尾       L
+  屏中央     M
+  前翻页    ctrl + b    backward
+  后翻页    ctrl + f    forward
+
+  x     删除一个字符
+  dw    删除当前词
+  3dw   删除3个单词
+  dd    删除当前行
+  5dd   删除5行 （当前行开始）
+  :5, 10d   冒号模式，删除5~10行
+
+  r    替换一个字符
+  cw   替换一个单词
+  cc    替换一行
+  C     替换从光标到行尾
+
+  yw    拷贝词
+  yy    拷贝行 （Y）   5yy    拷贝5行
+  p      粘贴
+  :1,2co3  拷贝行1，行2到行3之后
+  :4,5m6   移动行4，行5到行6之后   剪切
+
+  :w               存盘 write  (类似Windows中 ctrl + s)
+  :w  新文件名    另存为新文件
+  :wq              存盘退出 或  ZZ  (shift + z + z) 或:x
+  :q!               强制退出不存盘
+
+其它命令：
+  ~    大小写转换
+  J    把当前行和下一行连起来
+  u    撤销上一步  undo
+  :set number   显示行号   :set nu
+  :set nonumber 取消行号   :set nonu
+  :21    光标跳到指定行
+  21G   到21行      G表示文件为   1G第一行
+  /字符串    从当前行往下查找
+  ?字符串    从当前行往上查找
+  n          继续向下查找
+  N         反方向继续查找
+  :r  file2   在光标所在位置插入另一个文件 （合并）
+  :1,$s/旧串/新串/g     替换全文
+   说明：s表示替换  g表示全部替换 global
+  将所有: 换成@
+  :1,$s/:/@/g
+练习：将文件中所有的home全部替换为192.168.111.2
+  :1,$s/home/192.168.111.2/g
+
+4、head和tail
+head -10  文件名     查看文件前10行
+tail  -3   文件名      查看文件后3行
+
+技巧：tail -f 文件名   能够实时监控日志文件，动态刷新
+       ctrl + c 结束监控进程
+
+select * from emp where id=1;
+
+五、常用技巧
+1、过滤：grep     过滤出n行
+    grep  文本    过滤出结果中包含有该文本的行
+2、统计：wc     行、单词、字符 的数量
+3、排序：sort   
+4、管道：|
+ 管道符用于连接两个命令：前一个命令的输出，作为后一个命令的输入。
+例子1：将/etc/passwd的头10行，写入f5中
+$ head -10 /etc/passwd > f5
+
+例子2：将/etc/passwd的头10行排序后，写入f6中
+$ head -10 /etc/passwd | sort > f6
+
+练习：将/etc/passwd排序后的前10行，写入f7中
+$ sort /etc/passwd | head -10 > f7
+
+5、管道more:  分页显示
+$ ls -l  /etc
+$ ls -l  /etc | more
+
+6、管道grep:  过滤
+$ ls -l  /etc
+$ ls -l  /etc | grep  ssh
+drwxr-xr-x    2 root   root    4096 10月 18 11:37 ssh
+
+练习：查阅alice用户账户信息    /etc/passwd
+$ cat /etc/passwd | grep alice
+
+alice:x:502:502::/home/alice:/bin/bash
+
+7、管道wc：统计   行  词  字符
+$ cat f1 | wc
+练习：查询出在girls组有几个用户
+$ cat /etc/group | grep girls
+girls:x:502:
+$ cat /etc/passwd | grep 502 | wc
+
+六、进程管理
+1、查看当前系统所有进程
+ ps  -ef  以全格式显示当前系统所有进程
+      -e   所有进程
+      -f   全格式
+
+UID      PID  PPID  C STIME TTY          TIME CMD
+root       1     0  0 09:04 ?        00:00:03 init
+
+Uid: 用户id  用户名
+Pid: 进程id
+PPid: 父进程id
+C: CPU占有率
+Stime: 开始时间
+TTY: 开始该进程的终端号
+Time: 此进程运行总时间
+CMD: 启动该进程的命令名
+
+启动sleep进程： sleep 1000
+查找出sleep进程的pid:
+$ ps -ef | grep sleep
+         Pid
+alice   3288  2963  0 17:58 pts/0  00:00:00 sleep 1000
+
+2、根据进程id杀进程：kill  进程id
+$ kill 3288    只有root或命令的启动者才有权限杀进程
+$ su      密码123456
+# kill 3288
+
+3、根据进程命令名杀进程：pkill  命令名
+# pkill  sleep
+
+关机：halt       halt: must be superuser.
+重启：reboot    reboot: must be superuser.
+必须是超级用户root才有权限！
+
+adt4_2_32bit.rar  600M

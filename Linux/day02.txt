@@ -1,0 +1,418 @@
+复习：
+1、安装Linux操作系统
+ 结合VM安装，注意硬件配置、磁盘分区、root账号设置、软件选配（vi 编辑器）...
+2、搭建网络环境
+设置IP、重启网络服务、关闭防火墙
+3、登录系统方式  推荐命令行
+1）本地登录  
+2）远程登录 （常用） SSH客户端软件
+4、命令的组成：命令名  [-选项...]  [参数 ...]
+区分大小写，对系统进行各种操作。
+原理：命令都是文件，运行后都是一个进程
+        命令名就是文件名
+  比如 ping IP地址     ctrl + c 结束当前进程
+5、Linux常用的命令：
+1）查看IP地址：ifconfig
+2）设置网络IP：netconfig
+3）重启网络服务：service network restart
+4）查看网络是否可达：ping IP地址
+5）结束控制台当前进程：ctrl + c
+6）关闭防火墙：iptables -F
+7）退出登录：exit
+8）查看日期：date
+9）查看日历：cal      cal 2016     cal 11 2016
+10）查看最初登录用户身份：who am i
+11）查看当前用户名：whoami
+12）查看当前用户详细身份：id    (我是谁？)   root
+13）查看当前在线用户：who
+14）查看当前工作目录：pwd       (我在哪儿？)  /root下
+15）切换到图形界面：startx   红帽->注销返回命令行
+16）查看目录下的内容：ls         (我有什么？)
+  ls -l  查看文件或目录的详细属性
+drwxr-xr-x  2 root   root      4096 10月 18 19:02 bin
+    第一列的第一个字符：-  文件   d 目录   Directory
+17）改变工作目录：cd  目录路径名
+ 绝对路径：从/目录开始表示的路径名   /root/1.txt
+ 当前路径：当前所在的目录的路径名    /root
+ 相对路径：相当于当前路径所在的路径  1.txt
+两个特殊的目录：
+ .  当前目录
+ .. 上一层目录
+# cd ..  回到上一层目录    到了/下
+   cd /    到/下    绝对路径
+# ls      查看/目录下的内容
+到/root下：
+# cd  /root   绝对路径
+或 cd  root   相对路径
+ 
+艾伦 图灵
+
+一、软硬件体系结构
+1、硬件体系： IPO模式
+    Input  输入      Process  处理      Output 输出
+     输入设备  -----  主机  -----  输出设备
+（键盘、鼠标等）                   （显示器、打印机等）
+                    （CPU 内存 硬盘）
+2、软件体系：以主流的B/S、C/S三层为例
+                      被测系统 SUT
+             ________________________________
+             网络                        网络
+    Client   ---  Application Server  --- DB Server
+  客户端             应用服务器            数据库服务器
+1）硬件：
+PC端：PC机、笔记本  服务器、小型机    服务器、小型机
+移动端：手机、pad      工作站              工作站
+2）操作系统：
+PC:Windows/Linux/Mac   Linux/Unix       Linux/Unix
+移动：Android/IOS/...
+3）中间件：（高度复用的复杂的软件）
+                     服务器软件             数据库管理系统
+ 无                 Tomcat/Weblogic     Mysql/Oracle
+4）应用程序：
+B/S: 浏览器       开发和部署Web App   数据库和表
+C/S: 开发App        企业级App            大量数据
+    请求---------> 处理 ---------> 增删查改
+    响应<--------        <---------
+
+二、Linux/Unix系统基本层次结构
+从外到内：
+   用户/应用程序 <-> Linux操作系统 <-> 硬件
+                    （Shell <-> Kernel 内核）
+1、shell（直译：外壳）命令解释器（翻译、解释命令）
+介于用户和内核之间，提供与系统的命令交互。
+shell本身也是一个进程，表现形式：终端、命令行风格
+常见的shell类型：bash   csh   sh   ksh ...  
+                 都是可执行的文件，称为命令
+类似于Windows: cmd   命令行窗口
+    C:\Windows\system32\cmd.exe   可执行文件
+查看当前是什么shell?  使用命令：ps   查看当前部分进程
+进程id 伪终端号           启动该进程的命令名
+  PID TTY          TIME CMD
+ 2497 pts/0    00:00:00 bash   当前默认的shell进程
+ 2951 pts/0    00:00:00 ps
+不同shell的风格不同，使用的命令几乎相同，可以切换成其它shell:
+ csh
+ sh
+ bash
+
+  PID TTY          TIME CMD
+ 2497 pts/0    00:00:00 bash
+ 2954 pts/0    00:00:00 csh
+ 2975 pts/0    00:00:00 sh
+ 2977 pts/0    00:00:00 bash
+ 2998 pts/0    00:00:00 ps
+规律：不同shell使用习惯不同，比如csh偏向于C语言的习惯，推荐使用bash，比较方便；
+  shell层层创建，是在当前shell进程中，创建子进程；
+  exit可以结束子进程，回到父进程；
+  最后一次exit表示退出登录；
+  登录系统时，默认启动一个登录shell (目前bash)
+趋势：shell中可执行各种命令，将命令写在文件中批量执行，称为shell脚本。完成系统的自动化、高效的管理。
+
+2、kernel 内核，和硬件打交道，比较底层。
+  （把硬件管理起来，将硬件屏蔽掉--透明的）
+管理内容：交换区swap space--虚拟内存、
+            文件系统 File System等
+Linux内核实现了五大功能：
+1）进程/处理器管理
+2）内存管理
+3）接口管理
+4）文件管理
+5）设备管理
+查看当前内核版本：uname -r    2.4.20-8
+基本组成：主版本号.次版本号.修订次数
+规律：次版本号为奇数，版本不稳定    2.5.10
+                 为偶数，版本相对稳定  2.6.10
+
+3、File System 文件系统：对Linux中的文件进行管理
+文件：包括文件、目录、外部设备等都被系统当做文件管理
+       因为文件具有属性，便于统一管理，一视同仁
+  /root/1.txt  文件名   
+  /root         目录名  目录下可以管理其它文件、目录
+  /dev/sda1  硬盘的第1个分区  设备文件
+
+三、Linux的通用特性
+1、支持多用户
+2、支持多任务
+3、支持用户界面（字符、图形）
+4、硬件的支持
+5、网络连接
+6、可安装网络服务
+7、应用程序的支持
+
+了解 熟悉  掌握  精通
+
+四、Linux/Unix的常用命令
+1、执行命令，就会执行一个可执行文件，会启动一个进程
+比如：date    ls    cal    ifconfig   ps
+       sleep  5   启动等待进程，等待5秒
+ sleep 500
+ ctrl + c 结束当前进程，交回终端
+ ctrl + z 挂起当前进程后台等待，交互终端
+ jobs     查看后台的任务  任务号
+[1]+  Stopped                 sleep 500
+ sleep 600
+ ctrl + z
+ jobs
+[1]-  Stopped                 sleep 500
+[2]+  Stopped                 sleep 600
+ fg  1     将1号任务前置继续运行
+ ctrl + c  结束
+ fg  2  
+ ctrl + c
+
+2、man 命令名     查看不同命令用法的帮助手册
+   Linux/Unix针对不同命令提供的 manual 手册
+比如：查阅ls的用法
+# man  ls
+ 控制方式：空格 -- 翻页
+             回车 -- 跳行
+              q    -- quit 退出
+ 
+ls - list directory contents  列出目录下的内容
+  -l     use a long listing format   使用长列表格式
+
+说明：man手册中存在大量术语，需要时再逐个分析，手册的内容以查为主。
+   deamon  精灵、精力充沛的人
+     Linux/Unix称为精灵进程、守护进程：在系统启动后在后台一直运行，为其它操作提供环境。
+
+3、查看目录下的内容：ls
+含义：目录下的内容包括文件、子目录
+   目录也是一种特殊的文件，文件的内容就是存储信息，目录的内容就是管理文件、子目录的关系（注册表）。
+1）ls -l   use a long listing format   使用长列表格式   
+           查看目录下的文件或目录的详细属性
+
+文件类型 权限  属主  属组 文件大小   最后一次修改时间
+-rw-r--r-- 1  root  root    967 10月 18 19:35 abc.txt
+           硬链接数                               文件/目录名
+除了文件名、文件内容，其它就是文件或目录的属性：
+<1> 文件类型： -  文件   d  目录
+<2> 权限：rw-r--r--
+<3> 属主：文件的拥有者、创建人、用户   user/owner 
+<4> 属组：该用户所在的组   从属关系    group
+<5> 文件大小：单位是字节 Byte
+<6> 最后一次修改时间
+
+说明：Linux中简写为ll，不推荐，建议使用ls -l  通用的
+
+2）ls -a     a就是all 所有的
+ 显示目录下的所有内容，包括隐藏的文件或目录。
+ 规律：以.开头命名的文件、目录，具备隐藏属性。
+        .f1    .dir1
+
+3）ls -al  或  -la   多个选项可以组合使用，功能的叠加
+     既能够看到所有内容，又能够看到详细属性
+
+4）ls -R  目录和文件全部展开，便于查看目录的结构
+
+5）ls -t  按照时间先后排列（文件最后一次修改时间）
+           经常关注最近修改过的文件
+6）ls -lt  -t叠加-l功能 
+7）ls -F  可以查看文件的类型
+         普通文件     无后缀显示
+         目录          /结尾
+         可执行文件   *结尾
+练习：分别到/root下、/下、/bin下查看文件的类型
+    cd /root     ls -F
+    cd  /
+    cd  /bin
+8）ls -ld   不出当前目录，直接查看当前目录的属性
+之前：cd ..    返回到上一层目录
+       ls -l     查看目录下内容属性
+drwxr-x---  12 root   root     4096 10月 18 17:38 root
+目前：ls -ld
+drwxr-x---  12 root     root   4096 10月 18 17:38 .
+
+4、清屏：clear
+对比: Windows cmd:  cls
+       Sqlplus:  clear screen
+
+回顾：磁盘分区情况    /dev 设备目录  
+/dev/sda  代表一块硬盘
+分区设备文件   挂载点    类型    大小
+/dev/sda1       /boot    ext3   100M
+/dev/sda2       无       swap    2G
+/dev/sda3       /         ext3    6G
+
+5、查看磁盘空间   fdisk -l
+应用场合：当系统出现突然变慢的问题时，可以查看Linux服务器的磁盘空间，判断是否空间不足存在瓶颈。
+
+Disk /dev/sda: 8589 MB, 8589934592 bytes
+255 heads, 63 sectors/track, 1044 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sda1   *         1        13    104391   83  Linux
+/dev/sda2            14       268   2048287+  82  Linux swap
+/dev/sda3           269      1044   6233220   83  Linux
+
+Blocks： Data block  数据块
+Id：  idle  空闲的磁盘空间  83%
+
+补充：df -k          -k表示以 KB为单位显示
+文件系统        1K-块        已用     可用 已用% 挂载点
+/dev/sda3      6135236   1065644   4757932  19% /
+/dev/sda1     101089      9425     86445  10% /boot
+none           515444         0    515444   0% /dev/shm
+
+补充：mount    查看分区的挂载情况
+/dev/sda3 on / type ext3 (rw)
+none on /proc type proc (rw)
+usbdevfs on /proc/bus/usb type usbdevfs (rw)
+/dev/sda1 on /boot type ext3 (rw)
+none on /dev/pts type devpts (rw,gid=5,mode=620)
+none on /dev/shm type tmpfs (rw)
+
+补充：在手动分区时已经自动完成了挂载操作
+命令：mount  设备名   挂载点
+      mount  /dev/sda1   /boot
+      mount  /dev/sda3    /
+
+6、查看文件的内容：cat  文件路径名
+    不可翻页，适合查看小文件
+# cd /root               cd /r   Tab
+# ls
+# cat  install.log        Tab自动补全文件、目录名
+# date    查看日期
+# cal      查看日历
+# cal 2016       某年
+# cal 11 2016   某年某月
+
+平时命令执行的结果默认向终端输出。（标准输出）
+新的需求：希望将结果写入某个文件中，保存好。
+ >  输出重定向：将输出的结果重新导向到文件中，而不是终端。
+# date > 1.txt    将date的结果写入1.txt文件中
+# ls 
+# ls -l 1.txt     查看文件属性
+-rw-r--r--   1 root     root     29 10月 19 15:37 1.txt
+# cat  1.txt     查看文件内容
+# cal > 1.txt
+# cat 1.txt
+
+规律：文件的结尾是特殊的符号 EOF  文件结束符 占1Byte
+
+ >     输出重定向，新的会覆盖旧的
+ >>    输出追加重定向，向原有文件结尾追加内容
+
+# date >> 1.txt
+# cal 11 2016 >> 1.txt
+# cat 1.txt
+
+7、文件/目录的常见概念
+1）绝对路径：从/开始表示的路径名
+       /etc/passwd
+       /root/1.txt
+2）当前路径：当前所在目录的路径名    pwd查看
+       /root
+3）相对路径：相当于当前目录表示的路径名
+       1.txt
+       ../etc/passwd     (.. 回到/下 进入etc 找到passwd)
+4）用户主目录： Home Directory  (家目录)
+ 用户登录Linux系统后，默认所在的目录
+ 普通用户在自己的主目录中，拥有大量的权限，出了主目录，可能会处处受挫；
+ 普通用户的主目录都在/home目录下，目录名等同于用户名
+ root用户的主目录就是/root;
+
+查看/etc/passwd文件：  用户的账户信息配置文件
+# cat  /etc/passwd
+用户名:口令占位符:uid:gid:描述:主目录:登录shell
+root:x:0:0:root:/root:/bin/bash
+
+技巧：想快速回到用户主目录
+       cd  回车   或  cd ~
+
+说明：~  代替主目录
+   echo  ~      查看~的值  /root
+   echo  回声
+   echo  abc
+   echo  hello
+   echo  $系统变量名    查看系统变量的值
+   echo  $JAVA_HOME     JDK的安装路径
+   echo  $PATH              命令的搜索路径
+/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/root/bin
+原理：我们可以将常用的命令所在路径名，配置到系统环境变量PATH的值中，冒号分隔，越靠前的优先找到。后续在任何位置下，只需要使用相对路径就能找到执行的命令名。如果都找不到就提示“command not found”
+
+8、创建目录：mkdir  目录路径名
+# cd     回到主目录  /root
+# mkdir test    创建一个test目录
+# ls -l
+# cd test
+# ls       什么都没有
+# ls -la   只有 . 和 ..
+
+练习：在test目录中继续创建其它目录层次
+# mkdir  dir1/dir2
+mkdir: 无法创建目录‘dir1/dir2’: 没有那个文件或目录
+注意：Linux/Unix中，需要加 -p 选项，才可以创建一个目录层次，一气呵成
+# mkdir -p  dir1/dir2
+# ls -R    查看目录层次
+回到test下
+# cd ~/test       ~表示/root  全名：/root/test
+# mkdir dir3  dir4  dir5    依次创建多个目录
+在主目录下新建一个game目录
+# mkdir ~/game       绝对路径：/root/game
+
+切换图形界面：startx   查看目录结构      注销
+
+9、新建文件：touch  文件路径名
+说明：如果文件名不存在，创建一个新的、空的文件
+      如果文件名存在，只会修改文件的最后一次修改时间
+# cd ~/test
+# date > 1.txt     重定向生成一个1.txt文件
+# ls -l 1.txt    属性
+# cat 1.txt     内容
+# touch  2.txt
+# ls -l  *.txt    查看所有.txt文件的属性
+# cat  2.txt
+# touch 1.txt   
+# ls -l  *.txt   1.txt最后一次修改时间变了
+# cat 1.txt     文件内容不变
+
+10、创建隐藏文件或目录：
+# touch  .news       创建隐藏文件
+# mkdir  .dir1       创建隐藏目录
+# ls
+# ls -a      
+
+11、拷贝文件： cp  源文件路径名  新的路径名
+     copy 目的：为了备份
+# cp 1.txt  11.txt   将1.txt备份为11.txt
+
+12、移动或重命名：mv  源文件路径名  新的路径名
+     move
+# mv 11.txt  22.txt    重命名
+本质：改变文件的绝对路径名
+   源文件路径名：/root/test/11.txt
+   新的路径名：  /root/test/22.txt
+
+练习：在~/test下，新建d1和d2目录
+   d1目录下新建1.txt文件，文本内容：hello
+   将1.txt文件进行拷贝和移动等操作。
+1）在~/test下，新建d1和d2目录
+# cd  
+# cd test     或  cd ~/test
+# mkdir d1
+# mkdir d2    或 mkdir d1 d2    
+2）d1目录下新建1.txt文件，文本内容：hello
+# cd d1
+# pwd     在/root/test/d1下
+# touch 1.txt
+# echo hello >> 1.txt
+# cat 1.txt
+3）将d1下的1.txt备份为11.txt
+# cp  1.txt  11.txt
+4）将d1下的1.txt拷贝到d2目录下，还叫1.txt
+# cp  1.txt  ../d2/       默认就是1.txt
+# cd  ../d2
+# pwd   在/root/test/d2下
+# ls -l
+5）将d1下的11.txt拷贝到d2中，还叫11.txt
+# cp  ../d1/11.txt   .
+6）将d1下的11.txt拷贝到d2中，叫111.txt
+# cp  ../d1/11.txt   ./111.txt
+7）将d1下的11.txt移动到d2中，改为22.txt
+# mv ../d1/11.txt   ./22.txt
+# ls
+# cd ../d1
+# ls
+
+作业：总结今天讲的Linux命令
